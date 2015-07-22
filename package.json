@@ -1,0 +1,20 @@
+{
+  "name": "banksy",
+  "version": "1.0.0",
+  "description": "Street art between woofmark and horsey",
+  "main": "banksy.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bevacqua/banksy.git"
+  },
+  "author": "Nicolas Bevacqua <nicolasbevacqua@gmail.com> (http://bevacqua.io/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bevacqua/banksy/issues"
+  },
+  "homepage": "https://github.com/bevacqua/banksy",
+  "dependencies": {
+    "crossvent": "1.5.0"
+  },
+  "devDependencies": {}
+}
