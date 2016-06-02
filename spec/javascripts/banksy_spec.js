@@ -1,29 +1,31 @@
-var editor;
+var editor, el, horse, bridge;
 
 describe("Banksy", function() {
 
   beforeAll(function() {
 
-    editor = woofmark($('#woofmark')[0], {
+    el = $('#woofmark')[0];
+
+    editor = woofmark(el, {
       parseMarkdown: megamark,
       parseHTML:     domador
     });
 
-    var horse = horsey(editor.editable, {
+    horse = horsey(el, {
       anchor: '@',
       suggestions: [
         { value: '@hodor',  text: 'Hodor' }
       ],
       set: function (value) {
         if (wysiwyg.mode === 'wysiwyg') {
-          editor.textarea.innerHTML = value;
+          editor.editable.innerHTML = value;
         } else {
           editor.textarea.value = value;
         }
       }
     });
 
-    var bridge = banksy(editor.textarea, {
+    bridge = banksy(el, {
       editor: editor,
       horse: horse
     });
@@ -39,7 +41,7 @@ describe("Banksy", function() {
       });
  
       // trigger the horsey:
-      crossvent.fabricate(editor.editable, "keypress");
+      crossvent.fabricate(el, "keypress");
 
     }
 
@@ -62,25 +64,27 @@ describe("Banksy", function() {
     enter('hello');
     expect($('.sey-list .sey-item:first').is(':visible')).toBe(false);
 
-    enter(' @');
-
-    var onShow = function() {
+    function onShow() {
 
       expect($('.sey-list .sey-item:first').is(':visible')).toBe(true);
       expect(editor.value()).toEqual('hello @');
 
       crossvent.remove(editor.editable, 'horsey-show', onShow);
+
       done();
 
     }
+
+    enter(' @');
 
     crossvent.add(editor.editable, 'horsey-show', onShow);
 
   });
 
 
-  it("autocompletes on selection click", function(done) {
+  it("autocompletes on selection click in wysiwyg mode", function(done) {
 
+    editor.setMode('wysiwyg');
     editor.value('');
 
     function onHide() {
@@ -99,7 +103,7 @@ describe("Banksy", function() {
       // possibly for the element to appear and/or move?
       setTimeout(function() {
 
-        expect($('.sey-list .sey-item:first').is(':visible')).toBe(true); // fails
+        expect($('.sey-list .sey-item:first').is(':visible')).toBe(true);
         expect(editor.value()).toEqual('hello again @');
  
         crossvent.add(editor.editable, 'horsey-selected', onSelect);
@@ -112,7 +116,7 @@ describe("Banksy", function() {
  
     function onSelect() {
  
-      expect(editor.value()).toEqual('hello again @hodor'); // fails
+      expect(editor.value()).toEqual('hello again @hodor');
  
       crossvent.remove($('.sey-list .sey-item:first')[0], 'horsey-hide', onHide);
       crossvent.remove(editor.editable, 'horsey-show', onShow);
@@ -125,6 +129,49 @@ describe("Banksy", function() {
     crossvent.add($('.sey-list .sey-item:first')[0], 'horsey-hide', onHide);
 
     enter('hello again'); // clear the horsey
+
+  });
+
+
+  it("autocompletes on selection click in markdown mode", function(done) {
+
+    editor.setMode('markdown');
+    editor.value('');
+ 
+    function onShow() {
+
+      // Somehow, dropping priority gives time for this to run; 
+      // possibly for the element to appear and/or move?
+      setTimeout(function() {
+
+        expect($('.sey-list .sey-item:first').is(':visible')).toBe(true);
+        expect(editor.value()).toEqual('hello markdown @');
+ 
+        crossvent.add(editor.textarea, 'horsey-selected', onSelect);
+ 
+        crossvent.fabricate($('.sey-list .sey-item:first')[0], "click");
+
+      }, 0);
+
+    }
+ 
+    function onSelect() {
+ 
+      expect(editor.value()).toEqual('hello markdown @hodor');
+ 
+      crossvent.remove(editor.textarea, 'horsey-show', onShow);
+      crossvent.remove($('.sey-list .sey-item:first')[0], 'horsey-hide', onSelect);
+ 
+      done();
+ 
+    }
+
+    crossvent.add(editor.textarea, 'horsey-show', onShow);
+
+    // wait for listener to subscribe
+    setTimeout(function() {
+      enter('hello markdown @');
+    }, 0);
 
   });
 
