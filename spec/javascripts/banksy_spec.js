@@ -104,7 +104,7 @@ describe("Banksy", function() {
       setTimeout(function() {
 
         expect($('.sey-list .sey-item:first').is(':visible')).toBe(true);
-        expect(editor.value()).toEqual('hello again @');
+        expect(editor.value()).toEqual('hello wysiwyg @');
  
         crossvent.add(editor.editable, 'horsey-selected', onSelect);
  
@@ -115,20 +115,30 @@ describe("Banksy", function() {
     }
  
     function onSelect() {
- 
-      expect(editor.value()).toEqual('hello again @hodor');
+
+      expect(editor.value()).toEqual('hello wysiwyg @hodor');
+  
+      editor.runCommand(function(chunks, mode) {
+console.log(chunks,"expect insertion point to be at the end");
+        // expect insertion point to be at the end
+        expect(chunks.before).toEqual('hello wysiwyg @hodor');
+        expect(chunks.after).toEqual('');
+      });
+
+// HERE WE FAIL -- insertion point location
+// but manually we succeed? maybe a timeout needed?
  
       crossvent.remove($('.sey-list .sey-item:first')[0], 'horsey-hide', onHide);
       crossvent.remove(editor.editable, 'horsey-show', onShow);
-      crossvent.remove($('.sey-list .sey-item:first')[0], 'horsey-hide', onSelect);
- 
+      crossvent.remove(editor.editable, 'horsey-selected', onSelect);
+
       done();
  
     }
 
     crossvent.add($('.sey-list .sey-item:first')[0], 'horsey-hide', onHide);
 
-    enter('hello again'); // clear the horsey
+    enter('hello wysiwyg'); // clear the horsey
 
   });
 
@@ -157,10 +167,15 @@ describe("Banksy", function() {
  
     function onSelect() {
  
-      expect(editor.value()).toEqual('hello markdown @hodor');
+      expect(editor.value()).toEqual('hello markdown @hodor ');
+
+      editor.runCommand(function(chunks, mode) {
+        expect(chunks.before).toEqual('hello markdown @hodor ');
+        expect(chunks.after).toEqual('');
+      });
  
       crossvent.remove(editor.textarea, 'horsey-show', onShow);
-      crossvent.remove($('.sey-list .sey-item:first')[0], 'horsey-hide', onSelect);
+      crossvent.remove(editor.textarea, 'horsey-selected', onSelect);
  
       done();
  
@@ -172,8 +187,94 @@ describe("Banksy", function() {
     setTimeout(function() {
       enter('hello markdown @');
     }, 0);
+    // alternatively, a double keypress can work:
+    // crossvent.fabricate(editor.editable, "keypress");
 
   });
 
+
+  xit("autocompletes two subsequent anchors in wysiwyg mode", function(done) {
+
+    editor.setMode('wysiwyg');
+    editor.value('');
+ 
+    function onShow() {
+
+      // Somehow, dropping priority gives time for this to run; 
+      // possibly for the element to appear and/or move?
+      setTimeout(function() {
+
+        expect($('.sey-list .sey-item:first').is(':visible')).toBe(true);
+        expect(editor.value()).toEqual('hello double @');
+ 
+        crossvent.add(editor.editable, 'horsey-selected', onSelect);
+ 
+        crossvent.fabricate($('.sey-list .sey-item:first')[0], "click");
+
+      }, 0);
+
+    }
+ 
+    function onSelect() {
+ 
+      expect(editor.value()).toEqual('hello double @hodor');
+
+      crossvent.remove(editor.editable, 'horsey-show', onShow);
+      crossvent.remove(editor.editable, 'horsey-selected', onSelect);
+
+      crossvent.add(editor.editable, 'horsey-show', onShowAgain);
+
+      enter(' @');
+
+      // double keypress is needed for some reason?
+      crossvent.fabricate(editor.editable,"keypress");
+ 
+    }
+ 
+    function onShowAgain() {
+
+      // Somehow, dropping priority gives time for this to run; 
+      // possibly for the element to appear and/or move?
+      setTimeout(function() {
+
+        expect($('.sey-list .sey-item:first').is(':visible')).toBe(true);
+        expect(editor.value()).toEqual('hello double @hodor @');
+ 
+        crossvent.add(editor.editable, 'horsey-selected', onSelectAgain);
+ 
+        crossvent.fabricate($('.sey-list .sey-item:first')[0], "click");
+
+      }, 0);
+
+    }
+ 
+    function onSelectAgain() {
+ 
+      expect(editor.value()).toEqual('hello double @hodor @hodor');
+ 
+      crossvent.remove(editor.editable, 'horsey-show', onShowAgain);
+      crossvent.remove(editor.editable, 'horsey-selected', onSelectAgain);
+ 
+      done();
+ 
+    }
+
+    crossvent.add(editor.editable, 'horsey-show', onShow);
+
+    enter('hello double @');
+
+  });
+
+
+  xit("autocompletes at the end of a line with existing lines below and retains correct insertion point location", function(done) {
+  });
+
+
+  xit("autocompletes at the end of a line and does not create double @@", function(done) {
+  });
+
+
+  xit("autocompletes @h with enter key and does not move insertion point to start of line", function(done) {
+  });
 
 });
